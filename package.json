@@ -1,0 +1,76 @@
+{
+  "name": "@tyza66/alpha-model-auto-switch",
+  "description": "Alpha plugin that automatically switches to another model from the same provider when the current model becomes severely unavailable, ensuring task continuity without breaking execution.",
+  "version": "1.0.20261007-1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tyza66/alpha-model-auto-switch.git"
+  },
+  "homepage": "https://github.com/tyza66/alpha-model-auto-switch#readme",
+  "bugs": {
+    "url": "https://github.com/tyza66/alpha-model-auto-switch/issues"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/patch-state.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/unit.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@mutantcat/dsh-client-locale",
+        "@mutantcat/dsh-client-ui-slots",
+        "@mutantcat/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "dependencies": {
+    "@mutantcat/schemastery": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@mutantcat/dsh-agent": "^1.0.0",
+    "@mutantcat/dsh-host-webserver": "^1.0.0",
+    "@mutantcat/dsh-llm": "^1.0.0",
+    "@mutantcat/cordis": "^4.0.0",
+    "@mutantcat/cordis-plugin-loader": "^1.0.0"
+  },
+  "keywords": [
+    "alpha",
+    "mutantcat",
+    "cordis",
+    "model",
+    "failover",
+    "auto-switch",
+    "resilience"
+  ]
+}

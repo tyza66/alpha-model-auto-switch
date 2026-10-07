@@ -1,0 +1,48 @@
+# alpha-model-auto-switch — automatic model failover bundle for the Alpha web profile.
+#
+# Mounts over dsh-web-app. Watches every LLM stream call; when the current
+# model becomes severely unavailable (consecutive failures with retryable or
+# fatal error codes), automatically switches to another model from the same
+# provider and continues the task without breaking execution.
+
+# ── insert the auto-switch row ───────────────────────────────────────────
+- insert:
+    - id: model-auto-switch
+      name: '@tyza66/alpha-model-auto-switch'
+      disabled: false
+      config:
+        # Enable/disable the auto-switch mechanism globally.
+        enabled: true
+        # Number of consecutive failures before triggering a model switch.
+        # Failures are counted per (provider, model) pair and reset on success.
+        failureThreshold: 3
+        # Error codes that count toward the failure threshold.
+        # These are the codes that indicate the model itself is unavailable
+# (not transient network issues that the retry policy already handles).
+        fatalErrorCodes:
+          - AUTH
+          - INVALID_CREDENTIAL
+          - QUOTA
+          - CONTEXT_WINDOW_EXCEEDED
+          - UNSUPPORTED_REASONING_EFFORT
+          - NO_ADAPTER
+          - INVALID_MODEL_INFO
+          - INVALID_ADAPTER
+          - REGISTRATION_DISPOSED
+        # Error codes that immediately trigger a switch (no threshold needed).
+        immediateSwitchCodes:
+          - AUTH
+          - INVALID_CREDENTIAL
+          - QUOTA
+          - NO_ADAPTER
+        # Maximum number of model switches per session before giving up.
+        # Prevents infinite switching loops when all models are down.
+        maxSwitchesPerSession: 10
+        # Cooldown period in milliseconds between switches.
+        # Prevents rapid-fire switching when multiple failures occur quickly.
+        switchCooldownMs: 5000
+        # Whether to inject a user-visible notice when switching models.
+        notifyOnSwitch: true
+        # Whether to exclude the current model from future selections.
+        # When true, once a model fails, it won't be selected again.
+        excludeFailedModels: true
