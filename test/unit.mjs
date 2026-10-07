@@ -14,21 +14,25 @@ process.env.DSH_HOME = '/tmp/alpha-model-auto-switch-test';
 test('readState returns defaults when file does not exist', () => {
   const state = readState('nonexistent-profile');
   assert.equal(state.enabled, true);
-  assert.equal(state.failureThreshold, 3);
-  assert.ok(Array.isArray(state.fatalErrorCodes));
-  assert.ok(state.fatalErrorCodes.includes('AUTH'));
+  assert.equal(state.maxConsecutiveFailures, 5, 'maxConsecutiveFailures should be 5');
+  assert.equal(state.cooldownMs, 60000, 'cooldownMs should be 60000');
+  assert.equal(state.quotaCooldownMs, 14400000, 'quotaCooldownMs should be 14400000');
+  assert.equal(state.maxCooldownMs, 86400000, 'maxCooldownMs should be 86400000');
+  assert.equal(state.autoRecover, true, 'autoRecover should be true');
+  assert.equal(state.failoverOnRateLimit, true, 'failoverOnRateLimit should be true');
+  assert.equal(state.failoverOnQuota, true, 'failoverOnQuota should be true');
 });
 
 test('writeState and readState round-trip', () => {
   const profile = 'test-roundtrip';
   const original = readState(profile);
   original.enabled = false;
-  original.failureThreshold = 5;
+  original.maxConsecutiveFailures = 7;
   writeState(profile, original);
   
   const loaded = readState(profile);
   assert.equal(loaded.enabled, false);
-  assert.equal(loaded.failureThreshold, 5);
+  assert.equal(loaded.maxConsecutiveFailures, 7);
 });
 
 test('readEnabled and writeEnabled work correctly', () => {
@@ -51,8 +55,8 @@ test('getSessionState creates default session state', () => {
 });
 
 test('recordFailure increments failure count', () => {
-  const profile = 'test-failure';
-  const sessionId = 'test-failure-session';
+  const profile = 'test-failure-unique';
+  const sessionId = 'test-failure-session-unique';
   const provider = 'test-provider';
   const model = 'test-model';
   
@@ -79,8 +83,8 @@ test('resetFailure clears failure count', () => {
 });
 
 test('recordSwitch updates session state', () => {
-  const profile = 'test-switch';
-  const sessionId = 'test-switch-session';
+  const profile = 'test-switch-unique';
+  const sessionId = 'test-switch-session-unique';
   const fromProvider = 'provider-a';
   const fromModel = 'model-a';
   const toProvider = 'provider-a';
@@ -104,13 +108,15 @@ test('updateSessionState merges updates', () => {
 });
 
 test('error code classification helpers work correctly', () => {
-  // These are tested indirectly through the main logic
-  const immediateCodes = ['AUTH', 'INVALID_CREDENTIAL', 'QUOTA', 'NO_ADAPTER'];
-  const fatalCodes = ['AUTH', 'INVALID_CREDENTIAL', 'QUOTA', 'CONTEXT_WINDOW_EXCEEDED'];
-  
-  assert.ok(immediateCodes.includes('AUTH'));
-  assert.ok(fatalCodes.includes('CONTEXT_WINDOW_EXCEEDED'));
-  assert.ok(!immediateCodes.includes('CONTEXT_WINDOW_EXCEEDED'));
+  // Test the new error classification structure
+  const state = readState('test-classification');
+  assert.equal(state.failoverOnRateLimit, true);
+  assert.equal(state.failoverOnTimeout, true);
+  assert.equal(state.failoverOnServerError, true);
+  assert.equal(state.failoverOnTransportError, true);
+  assert.equal(state.failoverOnStreamInterrupted, true);
+  assert.equal(state.failoverOnEmptyResponse, false);
+  assert.equal(state.failoverOnQuota, true);
 });
 
 test('model selection excludes failed models', () => {
